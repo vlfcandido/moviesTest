@@ -39,12 +39,35 @@ Este repositório contém uma API RESTful que processa e analisa a lista de indi
 A função `getProducerAwardIntervals()` executa os seguintes passos:
 1. **Busca os vencedores** no banco de dados através do `MovieRepository.getWinningProducers()`.
 2. **Divide produtores múltiplos** (quando há mais de um por filme), separando por vírgula e "and".
-3. **Ordena os anos** de vitória para cada produtor.
-4. **Ignora anos duplicados** para evitar intervalos incorretos.
+3. **Ordena os anos** de vitória para cada produtor em ordem crescente.
+4. **Ignora anos duplicados** para evitar intervalos incorretos, pois um mesmo filme pode estar listado várias vezes com o mesmo produtor.
 5. **Calcula intervalos** entre as vitórias consecutivas.
 6. **Identifica os menores e maiores intervalos** para retorno.
 
-Este método também inclui logs para depuração e tratamento de erros para casos onde os dados estejam inconsistentes ou faltantes.
+### **Estrutura de Retorno**
+A resposta do endpoint segue o seguinte formato:
+```json
+{
+    "min": [
+        {
+            "producer": "Joel Silver",
+            "interval": 1,
+            "previousWin": 1990,
+            "followingWin": 1991
+        }
+    ],
+    "max": [
+        {
+            "producer": "Matthew Vaughn",
+            "interval": 13,
+            "previousWin": 2002,
+            "followingWin": 2015
+        }
+    ]
+}
+```
+
+A API implementa o **padrão Service Repository**, onde a lógica de negócios é centralizada no `AwardService` e a persistência de dados é gerenciada pelo `MovieRepository`.
 
 ---
 
@@ -66,10 +89,11 @@ Para rodar os testes, utilize:
 npm test -- --verbose
 ```
 
-O teste principal verifica:
-- Se o endpoint `/api/movies/awards/intervals` responde corretamente.
-- Se os dados retornados correspondem aos intervalos esperados.
-- Se os status HTTP estão corretos, sendo `200` quando existem vencedores e `404` quando não existem registros elegíveis.
+### **Validações nos Testes**
+- Verificação do status HTTP (`200` quando existem vencedores e `404` quando não há registros elegíveis).
+- Comparação dos resultados retornados com os valores esperados para `min` e `max`.
+- Teste de inserção e recuperação de dados do banco de dados SQLite em memória.
+- Logs detalhados para depuração, incluindo a verificação dos filmes armazenados antes da execução do teste.
 
 ---
 
