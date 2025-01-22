@@ -12,10 +12,11 @@ Este repositório contém uma API RESTful que processa e analisa a lista de indi
 - [4. Executando a Aplicação](#4-executando-a-aplicação)
   - [4.1. Como Alterar o Arquivo CSV](#41-como-alterar-o-arquivo-csv)
 - [5. Endpoints da API](#5-endpoints-da-api)
-- [6. Funcionamento Interno (Serviços e Lógica)](#6-funcionamento-interno-serviços-e-lógica)
-- [7. Testes de Integração](#7-testes-de-integração)
-- [8. Requisitos Atendidos](#8-requisitos-atendidos)
-- [9. Estrutura de Pastas](#9-estrutura-de-pastas)
+- [6. Formato da API](#6-formato-da-api)
+- [7. Funcionamento Interno (Serviços e Lógica)](#7-funcionamento-interno-serviços-e-lógica)
+- [8. Testes de Integração](#8-testes-de-integração)
+- [9. Requisitos Atendidos](#9-requisitos-atendidos)
+- [10. Estrutura de Pastas](#10-estrutura-de-pastas)
 
 ---
 
@@ -32,19 +33,8 @@ Este repositório contém uma API RESTful que processa e analisa a lista de indi
 
 ---
 
-## 6. Funcionamento Interno (Serviços e Lógica)
+## 6. Formato da API
 
-### **Método getProducerAwardIntervals**
-
-A função `getProducerAwardIntervals()` executa os seguintes passos:
-1. **Busca os vencedores** no banco de dados através do `MovieRepository.getWinningProducers()`.
-2. **Divide produtores múltiplos** (quando há mais de um por filme), separando por vírgula e "and".
-3. **Ordena os anos** de vitória para cada produtor em ordem crescente.
-4. **Ignora anos duplicados** para evitar intervalos incorretos, pois um mesmo filme pode estar listado várias vezes com o mesmo produtor.
-5. **Calcula intervalos** entre as vitórias consecutivas.
-6. **Identifica os menores e maiores intervalos** para retorno.
-
-### **Estrutura de Retorno**
 A resposta do endpoint segue o seguinte formato:
 ```json
 {
@@ -66,12 +56,11 @@ A resposta do endpoint segue o seguinte formato:
     ]
 }
 ```
-
-A API implementa o **padrão Service Repository**, onde a lógica de negócios é centralizada no `AwardService` e a persistência de dados é gerenciada pelo `MovieRepository`.
+Isso garante um formato estruturado para facilitar a análise e consumo por outros sistemas.
 
 ---
 
-## 7. Testes de Integração
+## 8. Testes de Integração
 
 Os testes garantem que a API funciona corretamente com diferentes cenários de dados e incluem:
 
@@ -79,21 +68,48 @@ Os testes garantem que a API funciona corretamente com diferentes cenários de d
 - **Múltiplos produtores** vencendo em diferentes anos.
 - **Anos duplicados** para garantir que não impactam os cálculos.
 - **Cenário sem vencedores** onde a resposta deve ser `{ "min": [], "max": [] }`.
+- **Falha no banco de dados** para validar tratamento de erro.
 
-### **Estrutura dos testes**
-Os testes utilizam **Supertest** para realizar requisições HTTP na API em um banco de dados SQLite em memória. Antes de cada teste, a tabela `movies` é reinicializada.
-
-#### **Execução dos testes**
+### **Execução dos testes**
 Para rodar os testes, utilize:
 ```bash
 npm test -- --verbose
 ```
 
-### **Validações nos Testes**
-- Verificação do status HTTP (`200` quando existem vencedores e `404` quando não há registros elegíveis).
-- Comparação dos resultados retornados com os valores esperados para `min` e `max`.
-- Teste de inserção e recuperação de dados do banco de dados SQLite em memória.
-- Logs detalhados para depuração, incluindo a verificação dos filmes armazenados antes da execução do teste.
+---
+
+## 9. Requisitos Atendidos
+
+- **Banco de dados em memória**: utilizando SQLite (`":memory:"`).
+- **Leitura dinâmica de CSV**: permitindo testes com diferentes arquivos.
+- **API RESTful**: seguindo boas práticas e estrutura organizada.
+- **Testes de integração completos**: cobrindo diferentes cenários de dados.
 
 ---
+
+## 10. Estrutura de Pastas
+
+```
+golden-raspberry-api
+│-- package.json
+│-- server.js               # Inicializa a aplicação e popula o banco
+│-- README.md
+│-- tests
+│   └── integration
+│       └── movieApi.test.js
+│-- src
+    ├── app.js              # Configuração do Express
+    ├── controllers
+    │   └── movieController.js
+    ├── db
+    │   ├── database.js     # Configuração do banco SQLite em memória
+    ├── repositories
+    │   └── movieRepository.js
+    ├── routes
+    │   └── movies.js
+    ├── services
+    │   └── awardService.js # Lógica de cálculo de intervalos
+    └── utils
+        ├── populateDatabase.js # Script para carregar CSV e inserir no banco
+```
 
