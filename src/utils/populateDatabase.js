@@ -1,31 +1,34 @@
 const path = require("path");
-const CsvService = require("../services/csvService");
+const { initializeDatabase } = require("../db/database");
 const MovieRepository = require("../repositories/movieRepository");
-
-const csvFilePath = path.join(__dirname, "../../data/movies.csv");
+const CsvService = require("../services/csvService");
 
 /**
- * Popula o banco de dados lendo e processando os dados do CSV.
+ * Cria a tabela 'movies' (caso não exista) e insere os dados do CSV.
  */
 async function populateDatabase() {
-    try {
-        const movieRepository = new MovieRepository();
-        console.log("[INFO] Verificando estrutura do banco de dados...");
+  try {
+    console.log("[INFO] Verificando estrutura do banco de dados...");
+    
+    // 1. Cria/verifica a tabela 'movies'
+    await initializeDatabase();
+    console.log("[INFO] Tabela 'movies' criada/verificada com sucesso.");
 
-        const csvService = new CsvService(csvFilePath);
-        const movies = await csvService.loadCSV();
+    // 2. Lê o CSV
+    const csvFilePath = path.join(__dirname, "../../data/movies.csv"); 
+    // Ajuste o nome e caminho do CSV conforme sua estrutura
+    const csvService = new CsvService(csvFilePath);
+    const movies = await csvService.loadCSV();
 
-        console.log(`[INFO] Total de filmes lidos do CSV: ${movies.length}`);
+    // 3. Insere os filmes
+    const movieRepository = new MovieRepository();
+    await movieRepository.insertMovies(movies);
+    console.log(`[INFO] Total de filmes lidos do CSV: ${movies.length}`);
 
-        if (movies.length > 0) {
-            await movieRepository.insertMovies(movies);
-            console.log("[INFO] Banco de dados populado com sucesso.");
-        } else {
-            console.warn("[WARN] Nenhum filme válido foi encontrado no CSV.");
-        }
-    } catch (error) {
-        console.error("[ERROR] Erro ao popular banco:", error);
-    }
+  } catch (error) {
+    console.error("[ERROR] Ocorreu um erro ao popular o banco de dados:", error);
+    throw error; // re-lança para o .catch do server.js
+  }
 }
 
 module.exports = populateDatabase;
