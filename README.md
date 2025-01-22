@@ -12,8 +12,9 @@
 7. [Estrutura de Retorno](#estrutura-de-retorno)  
 8. [Funcionamento Interno](#funcionamento-interno)  
 9. [Testes de Integração](#testes-de-integração)  
-10. [Estrutura de Pastas](#estrutura-de-pastas)  
-11. [Requisitos Atendidos](#requisitos-atendidos)  
+10. [Como Rodar os Testes](#como-rodar-os-testes)  
+11. [Estrutura de Pastas](#estrutura-de-pastas)  
+12. [Requisitos Atendidos](#requisitos-atendidos)  
 
 ---
 
@@ -134,38 +135,62 @@ Se não houver produtores com mais de uma vitória, a resposta será:
 
 ---
 
+## Testes de Integração
+
+Os testes garantem que a API funciona corretamente e cobrem os seguintes cenários:
+
+1. **Produtores com múltiplos prêmios** - Verifica se o menor e maior intervalo estão corretos.
+2. **Sem vencedores** - O endpoint deve retornar `{ "min": [], "max": [] }`.
+3. **Banco de dados vazio** - A aplicação não deve quebrar caso não haja dados carregados.
+4. **Filmes com anos repetidos** - Testa se anos duplicados não afetam os cálculos.
+5. **Erros no banco** - Simula falhas no banco e verifica se a API responde corretamente.
+
+---
+
+## Como Rodar os Testes
+
+Os testes utilizam **Jest + Supertest** para simular chamadas HTTP e verificar o funcionamento completo da API.
+
+### **Executando os Testes**
+```bash
+npm test -- --verbose
+```
+
+O comando executa todos os testes na pasta `tests/integration` e exibe os logs de cada teste executado.
+
+### **Resultados Esperados**
+- Status `200` para consultas bem-sucedidas.
+- Retorno de listas vazias quando apropriado.
+- Manipulação correta de anos repetidos e múltiplos produtores.
+- Retorno de erro `500` caso ocorra uma falha no banco.
+
+---
+
 ## Estrutura de Pastas
 
 ```
 moviesTest
 │-- package.json
-│-- server.js               # Inicializa a aplicação e popula o banco
+│-- server.js
 │-- README.md
 │-- tests
 │   └── integration
 │       └── movieApi.test.js
 │-- src
-    ├── app.js              # Configuração do Express
     ├── controllers
-    │   └── movieController.js
     ├── db
-    │   ├── database.js     # Configuração do SQLite em memória
     ├── repositories
-    │   └── movieRepository.js
     ├── routes
-    │   └── movies.js
     ├── services
-    │   └── awardService.js # Lógica de cálculo de intervalos
-    └── utils
-        ├── populateDatabase.js # Carregamento de CSV e inserção no banco
+    ├── utils
 ```
 
 ---
 
 ## Requisitos Atendidos
 
-- **Banco de dados em memória** utilizando SQLite (`":memory:"`).  
-- **Leitura dinâmica de CSV**, permitindo testes com diferentes arquivos.  
-- **API RESTful estruturada**, seguindo boas práticas.  
-- **Testes de integração completos**, cobrindo diferentes cenários de dados.  
-- **README detalhado**, com instruções claras para execução e testes.  
+- **Banco de dados em memória** utilizando SQLite.
+- **Leitura dinâmica de CSV**.
+- **Testes completos** cobrindo diferentes cenários.
+- **API RESTful estruturada**.
+
