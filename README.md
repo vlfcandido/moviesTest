@@ -169,4 +169,3 @@ moviesTest
 - **API RESTful estruturada**, seguindo boas práticas.  
 - **Testes de integração completos**, cobrindo diferentes cenários de dados.  
 - **README detalhado**, com instruções claras para execução e testes.  
-
