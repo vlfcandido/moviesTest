@@ -1,20 +1,27 @@
 # Golden Raspberry API
 
 ## Sobre o Projeto
-A Golden Raspberry API é uma API REST desenvolvida para calcular os produtores com maior e menor intervalo entre prêmios consecutivos da categoria "Pior Filme". O projeto integra um banco de dados SQLite para armazenar e recuperar informações sobre os filmes premiados.
+A Golden Raspberry API é uma API RESTful desenvolvida para processar e analisar a lista de indicados e vencedores da categoria "Pior Filme" do Golden Raspberry Awards. O sistema lê os dados de um arquivo CSV e armazena essas informações em um banco de dados em memória. O principal objetivo da API é fornecer informações sobre os produtores que receberam prêmios consecutivos, identificando o menor e o maior intervalo entre essas vitórias.
 
 ## Tecnologias Utilizadas
 - Node.js
 - Express.js
-- SQLite3
+- SQLite3 (banco de dados em memória)
 - Jest + Supertest (para testes de integração)
 
+## Requisitos do Sistema
+1. A API deve ler o arquivo CSV com os filmes e inserir os dados em um banco de dados em memória ao iniciar a aplicação.
+2. O banco de dados deve ser um SGBD embarcado, como SQLite, para facilitar a execução sem dependências externas.
+3. Nenhuma instalação de banco de dados externa deve ser necessária.
+4. O web service RESTful deve seguir o nível 2 de maturidade de Richardson.
+5. Devem ser implementados somente testes de integração para garantir que os dados obtidos correspondem aos dados da proposta.
+
 ## Regras de Negócio
-1. A API deve armazenar informações sobre filmes e seus respectivos vencedores da categoria "Pior Filme".
-2. A API deve ser capaz de calcular os produtores que receberam o prêmio múltiplas vezes e determinar o menor e o maior intervalo entre vitórias consecutivas.
-3. Se um produtor venceu mais de uma vez, a API deve calcular a diferença entre os anos das vitórias consecutivas.
-4. Caso um produtor tenha apenas uma vitória, ele não deve ser incluído no cálculo de intervalos.
-5. Caso não existam vencedores registrados, a API deve retornar uma lista vazia.
+1. A API deve armazenar informações sobre os filmes e seus respectivos vencedores da categoria "Pior Filme".
+2. A API deve calcular quais produtores receberam múltiplos prêmios e determinar o menor e maior intervalo entre suas vitórias consecutivas.
+3. Apenas produtores que ganharam mais de uma vez são incluídos nos cálculos de intervalo.
+4. Se um produtor venceu apenas uma vez, ele não deve ser incluído na resposta.
+5. Se não houver vencedores registrados, a API deve retornar uma lista vazia.
 
 ## Configuração do Ambiente
 
@@ -28,13 +35,6 @@ $ cd golden-raspberry-api
 ```sh
 $ npm install
 ```
-
-### Criar e popular o banco de dados
-Caso o banco ainda não tenha sido criado, execute o seguinte comando:
-```sh
-$ node src/utils/populateDatabase.js
-```
-Isso garantirá que a tabela `movies` seja criada e populada corretamente.
 
 ### Iniciar o servidor
 ```sh
@@ -76,13 +76,14 @@ GET /movies/awards/intervals
 ## Implementação dos Métodos
 
 ### `getProducerAwardIntervals()`
-Este método obtém os produtores com maior e menor intervalo entre prêmios consecutivos. Ele segue os seguintes passos:
-1. Recupera os produtores vencedores da base de dados.
-2. Agrupa os vencedores por produtor e ordena os anos de vitória.
-3. Calcula os intervalos entre os anos consecutivos de vitórias.
-4. Retorna os produtores com os menores e maiores intervalos.
+Este método processa os dados dos produtores e determina quais receberam prêmios consecutivos. Ele segue os seguintes passos:
+1. Recupera da base de dados todos os vencedores da categoria "Pior Filme".
+2. Agrupa os filmes por produtor, garantindo que múltiplos produtores em um mesmo filme sejam considerados separadamente.
+3. Ordena os anos de vitória de cada produtor para calcular corretamente os intervalos entre prêmios consecutivos.
+4. Calcula o menor e o maior intervalo de tempo entre as vitórias de cada produtor.
+5. Retorna um JSON com os produtores que possuem os menores e maiores intervalos registrados.
 
-Se não houver vencedores registrados ou se nenhum produtor tiver mais de uma vitória, o método retorna listas vazias.
+Se não houver produtores com múltiplas vitórias, a API retorna listas vazias.
 
 ## Testes de Integração
 
@@ -95,7 +96,8 @@ $ npm test -- --verbose
 Os testes de integração cobrem os seguintes cenários:
 1. Quando há produtores com prêmios consecutivos, o endpoint deve retornar corretamente os menores e maiores intervalos.
 2. Quando há apenas um vencedor único, a API deve retornar uma lista vazia.
-3. Quando não há vencedores no banco, a API deve retornar uma resposta sem resultados.
+3. Quando não há vencedores no banco, a API deve retornar uma resposta vazia sem erros.
+4. O banco de dados deve ser populado corretamente a partir do arquivo CSV e responder de acordo com os dados originais.
 
 ### Exemplo de saída esperada
 ```sh
