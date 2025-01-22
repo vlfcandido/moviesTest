@@ -1,41 +1,111 @@
 # Golden Raspberry API
 
-Este repositório contém uma API RESTful que processa e analisa a lista de indicados e vencedores da categoria **Pior Filme** do Golden Raspberry Awards. A aplicação **lê o arquivo CSV** com os filmes e **armazena tudo em um banco de dados em memória**, sem precisar instalar nenhum SGBD externo. O principal objetivo é **identificar os produtores** que receberam prêmios consecutivos, encontrando **o menor e o maior intervalo** entre as vitórias.
-
----
-
 ## Sumário
 
-- [1. Principais Funcionalidades](#1-principais-funcionalidades)
-- [2. Arquitetura e Organização](#2-arquitetura-e-organização)
-- [3. Pré-requisitos e Instalação](#3-pré-requisitos-e-instalação)
-- [4. Executando a Aplicação](#4-executando-a-aplicação)
-  - [4.1. Como Alterar o Arquivo CSV](#41-como-alterar-o-arquivo-csv)
-- [5. Endpoints da API](#5-endpoints-da-api)
-- [6. Formato da API](#6-formato-da-api)
-- [7. Funcionamento Interno (Serviços e Lógica)](#7-funcionamento-interno-serviços-e-lógica)
-- [8. Testes de Integração](#8-testes-de-integração)
-- [9. Requisitos Atendidos](#9-requisitos-atendidos)
-- [10. Estrutura de Pastas](#10-estrutura-de-pastas)
+1. [Visão Geral](#visão-geral)  
+2. [Arquitetura e Organização](#arquitetura-e-organização)  
+3. [Tecnologias Utilizadas](#tecnologias-utilizadas)  
+4. [Pré-requisitos e Instalação](#pré-requisitos-e-instalação)  
+5. [Executando a Aplicação](#executando-a-aplicação)  
+   - [Como Alterar o Arquivo CSV](#como-alterar-o-arquivo-csv)  
+6. [Endpoints da API](#endpoints-da-api)  
+7. [Estrutura de Retorno](#estrutura-de-retorno)  
+8. [Funcionamento Interno](#funcionamento-interno)  
+9. [Testes de Integração](#testes-de-integração)  
+10. [Estrutura de Pastas](#estrutura-de-pastas)  
+11. [Requisitos Atendidos](#requisitos-atendidos)  
 
 ---
 
-## 1. Principais Funcionalidades
+## Visão Geral
 
-1. **Leitura de CSV e inserção em memória**  
-   Ao iniciar, a aplicação lê um arquivo CSV contendo informações sobre os filmes indicados e vencedores da categoria “Pior Filme”, armazenando tudo em um banco SQLite em memória.
-2. **API RESTful para análise de prêmios**  
-   Disponibiliza um endpoint para identificar quais produtores ganharam múltiplos prêmios e **calcular o menor e maior intervalo** entre vitórias consecutivas.
-3. **Nenhuma instalação externa**  
-   O banco de dados roda em modo in-memory (similar a H2 no Java), então não há dependência de um servidor de banco de dados externo.
-4. **Somente testes de integração**  
-   Verifica o comportamento end-to-end da API (rota, lógica de negócio, banco de dados).
+A API processa a lista de indicados e vencedores do **Golden Raspberry Awards** para encontrar:  
+- O **produtor com o menor intervalo** entre dois prêmios consecutivos.  
+- O **produtor com o maior intervalo** entre dois prêmios consecutivos.  
+
+A aplicação lê um **arquivo CSV** contendo os filmes e **armazena os dados em um banco de dados em memória**, garantindo execução rápida e sem dependências externas.
 
 ---
 
-## 6. Formato da API
+## Arquitetura e Organização
 
-A resposta do endpoint segue o seguinte formato:
+A API segue o **nível 2 de maturidade de Richardson** e utiliza uma estrutura modular baseada no padrão **Service-Repository**:
+
+- **Controller**: Gerencia as requisições HTTP.  
+- **Service**: Contém a lógica de negócio para calcular os intervalos dos prêmios.  
+- **Repository**: Executa as operações no banco de dados SQLite em memória.  
+- **Database**: Configura e inicializa o banco SQLite.  
+- **Rotas**: Define os endpoints e associa aos controllers.  
+- **Utils**: Contém scripts auxiliares, como o carregamento do CSV.  
+
+---
+
+## Tecnologias Utilizadas
+
+- **Node.js**  
+- **Express.js**  
+- **SQLite**  
+- **Jest + Supertest**  
+- **CSV Parser**  
+
+---
+
+## Pré-requisitos e Instalação
+
+### Requisitos
+
+- **Node.js** versão **14+** (ou superior).  
+- **Gerenciador de pacotes** (`npm` ou `yarn`).  
+
+### Instalação
+
+```bash
+# Clonar o repositório
+git clone https://github.com/vlfcandido/moviesTest.git
+cd moviesTest
+
+# Instalar as dependências
+npm install
+```
+
+---
+
+## Executando a Aplicação
+
+### Iniciar o Servidor
+
+```bash
+npm start
+```
+
+O servidor estará disponível em **http://localhost:3000** por padrão.  
+
+**Observação**: A aplicação **lê e insere os dados do CSV automaticamente** no banco SQLite **ao iniciar**.
+
+---
+
+### Como Alterar o Arquivo CSV
+
+Caso queira testar com um novo conjunto de filmes, siga os passos:
+
+1. **Localize o arquivo CSV** na pasta `data/`.  
+2. **Substitua pelo seu arquivo**, mantendo o formato:  
+   ```
+   year;title;studios;producers;winner
+   1980;Can't Stop the Music;Associated Film Distribution;Allan Carr;yes
+   1981;Mommie Dearest;Paramount Pictures;Frank Yablans;yes
+   ```
+3. **Reinicie a aplicação** (`npm start`).  
+
+---
+
+## Endpoints da API
+
+### **GET** `/api/movies/awards/intervals`
+
+**Objetivo:** Obter os produtores com **o menor e o maior intervalo** entre dois prêmios consecutivos de “Pior Filme”.
+
+#### Exemplo de resposta:
 ```json
 {
     "min": [
@@ -56,41 +126,18 @@ A resposta do endpoint segue o seguinte formato:
     ]
 }
 ```
-Isso garante um formato estruturado para facilitar a análise e consumo por outros sistemas.
 
----
-
-## 8. Testes de Integração
-
-Os testes garantem que a API funciona corretamente com diferentes cenários de dados e incluem:
-
-### **Cenários testados**
-- **Múltiplos produtores** vencendo em diferentes anos.
-- **Anos duplicados** para garantir que não impactam os cálculos.
-- **Cenário sem vencedores** onde a resposta deve ser `{ "min": [], "max": [] }`.
-- **Falha no banco de dados** para validar tratamento de erro.
-
-### **Execução dos testes**
-Para rodar os testes, utilize:
-```bash
-npm test -- --verbose
+Se não houver produtores com mais de uma vitória, a resposta será:
+```json
+{ "min": [], "max": [] }
 ```
 
 ---
 
-## 9. Requisitos Atendidos
-
-- **Banco de dados em memória**: utilizando SQLite (`":memory:"`).
-- **Leitura dinâmica de CSV**: permitindo testes com diferentes arquivos.
-- **API RESTful**: seguindo boas práticas e estrutura organizada.
-- **Testes de integração completos**: cobrindo diferentes cenários de dados.
-
----
-
-## 10. Estrutura de Pastas
+## Estrutura de Pastas
 
 ```
-golden-raspberry-api
+moviesTest
 │-- package.json
 │-- server.js               # Inicializa a aplicação e popula o banco
 │-- README.md
@@ -102,7 +149,7 @@ golden-raspberry-api
     ├── controllers
     │   └── movieController.js
     ├── db
-    │   ├── database.js     # Configuração do banco SQLite em memória
+    │   ├── database.js     # Configuração do SQLite em memória
     ├── repositories
     │   └── movieRepository.js
     ├── routes
@@ -110,6 +157,16 @@ golden-raspberry-api
     ├── services
     │   └── awardService.js # Lógica de cálculo de intervalos
     └── utils
-        ├── populateDatabase.js # Script para carregar CSV e inserir no banco
+        ├── populateDatabase.js # Carregamento de CSV e inserção no banco
 ```
+
+---
+
+## Requisitos Atendidos
+
+- **Banco de dados em memória** utilizando SQLite (`":memory:"`).  
+- **Leitura dinâmica de CSV**, permitindo testes com diferentes arquivos.  
+- **API RESTful estruturada**, seguindo boas práticas.  
+- **Testes de integração completos**, cobrindo diferentes cenários de dados.  
+- **README detalhado**, com instruções claras para execução e testes.  
 
