@@ -28,113 +28,6 @@ A aplicação lê um **arquivo CSV** contendo os filmes e **armazena os dados em
 
 ---
 
-## Arquitetura e Organização
-
-A API segue o **nível 2 de maturidade de Richardson** e utiliza uma estrutura modular baseada no padrão **Service-Repository**:
-
-- **Controller**: Gerencia as requisições HTTP.  
-- **Service**: Contém a lógica de negócio para calcular os intervalos dos prêmios.  
-- **Repository**: Executa as operações no banco de dados SQLite em memória.  
-- **Database**: Configura e inicializa o banco SQLite.  
-- **Rotas**: Define os endpoints e associa aos controllers.  
-- **Utils**: Contém scripts auxiliares, como o carregamento do CSV.  
-
----
-
-## Tecnologias Utilizadas
-
-- **Node.js**  
-- **Express.js**  
-- **SQLite**  
-- **Jest + Supertest**  
-- **CSV Parser**  
-
----
-
-## Pré-requisitos e Instalação
-
-### Requisitos
-
-- **Node.js** versão **14+** (ou superior).  
-- **Gerenciador de pacotes** (`npm` ou `yarn`).  
-
-### Instalação
-
-```bash
-# Clonar o repositório
-git clone https://github.com/vlfcandido/moviesTest.git
-cd moviesTest
-
-# Instalar as dependências
-npm install
-```
-
----
-
-## Executando a Aplicação
-
-### Iniciar o Servidor
-
-```bash
-npm start
-```
-
-O servidor estará disponível em **http://localhost:3000** por padrão.  
-
-**Observação**: A aplicação **lê e insere os dados do CSV automaticamente** no banco SQLite **ao iniciar**.
-
----
-
-### Como Alterar o Arquivo CSV
-
-Caso queira testar com um novo conjunto de filmes, siga os passos:
-
-1. **Localize o arquivo CSV** na pasta `data/`.  
-2. **Substitua pelo seu arquivo**, mantendo o formato:  
-   ```
-   year;title;studios;producers;winner
-   1980;Can't Stop the Music;Associated Film Distribution;Allan Carr;yes
-   1981;Mommie Dearest;Paramount Pictures;Frank Yablans;yes
-   ```
-3. **Reinicie a aplicação** (`npm start`).  
-
----
-
-## Endpoints da API
-
-### **GET** `/api/movies/awards/intervals`
-
-**Objetivo:** Obter os produtores com **o menor e o maior intervalo** entre dois prêmios consecutivos de “Pior Filme”.
-
-#### Exemplo de resposta:
-```json
-{
-    "min": [
-        {
-            "producer": "Joel Silver",
-            "interval": 1,
-            "previousWin": 1990,
-            "followingWin": 1991
-        }
-    ],
-    "max": [
-        {
-            "producer": "Matthew Vaughn",
-            "interval": 13,
-            "previousWin": 2002,
-            "followingWin": 2015
-        }
-    ]
-}
-```
-
-Se não houver produtores com mais de uma vitória, a resposta será:
-```json
-{ "min": [], "max": [] }
-```
-
----
-
 ## Testes de Integração
 
 Os testes garantem que a API funciona corretamente e cobrem os seguintes cenários:
@@ -144,6 +37,11 @@ Os testes garantem que a API funciona corretamente e cobrem os seguintes cenári
 3. **Banco de dados vazio** - A aplicação não deve quebrar caso não haja dados carregados.
 4. **Filmes com anos repetidos** - Testa se anos duplicados não afetam os cálculos.
 5. **Erros no banco** - Simula falhas no banco e verifica se a API responde corretamente.
+6. **Validação de consistência com os dados do CSV** - Verifica se os dados retornados pela API correspondem exatamente aos dados carregados a partir do arquivo CSV utilizado pelo sistema. O teste:
+   - Lê os dados do arquivo CSV de referência.
+   - Insere os filmes no banco de dados em memória antes de cada teste.
+   - Chama o endpoint `/api/movies/awards/intervals` e compara o retorno com os dados processados do CSV.
+   - Falha caso haja qualquer divergência entre os dados esperados e os obtidos pela API.
 
 ---
 
@@ -163,6 +61,7 @@ O comando executa todos os testes na pasta `tests/integration` e exibe os logs d
 - Retorno de listas vazias quando apropriado.
 - Manipulação correta de anos repetidos e múltiplos produtores.
 - Retorno de erro `500` caso ocorra uma falha no banco.
+- Correspondência exata entre os dados retornados pela API e os dados processados do arquivo CSV de referência.
 
 ---
 
@@ -184,12 +83,3 @@ moviesTest
     ├── services
     ├── utils
 ```
-
----
-
-## Requisitos Atendidos
-
-- **Banco de dados em memória** utilizando SQLite.
-- **Leitura dinâmica de CSV**.
-- **Testes completos** cobrindo diferentes cenários.
-- **API RESTful estruturada**.
